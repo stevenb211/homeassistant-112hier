@@ -10,7 +10,8 @@ jobs:
   hacs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # v5 draait op Node 24; v4 gaf een waarschuwing dat Node 20 verouderd is.
+      - uses: actions/checkout@v5
       - uses: hacs/action@main
         with:
           category: integration
@@ -18,5 +19,5 @@ jobs:
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: home-assistant/actions/hassfest@master
