@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "112-meldingen volgen",
+        "description": "Kies waar je van wilt weten. Laat je alles leeg, dan krijg je heel Nederland — dat zijn er honderden per dag. Capcodes van je eigen post vind je op 112hier.nl/alerts; oproepen daarvoor komen altijd door.",
+        "data": {
+          "regios": "Veiligheidsregio's",
+          "diensten": "Diensten",
+          "plaats": "Woonplaats (optioneel)",
+          "punt": "Of een punt op de kaart",
+          "straal": "Straal rond dat punt",
+          "alleen_spoed": "Alleen spoed (A0, A1, P 1, PRIO 1)",
+          "interval": "Hoe vaak kijken",
+          "basis": "Adres van de feed",
+          "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
+          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+        }
+      }
+    },
+    "error": {
+      "geen_verbinding": "Geen verbinding met de feed. Klopt het adres, en heeft Home Assistant internet?",
+      "geen_feed": "Dit adres antwoordt wel, maar het is geen 112hier-feed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Instellingen aanpassen",
+        "data": {
+          "regios": "Veiligheidsregio's",
+          "diensten": "Diensten",
+          "plaats": "Woonplaats (optioneel)",
+          "punt": "Of een punt op de kaart",
+          "straal": "Straal rond dat punt",
+          "alleen_spoed": "Alleen spoed (A0, A1, P 1, PRIO 1)",
+          "interval": "Hoe vaak kijken",
+          "basis": "Adres van de feed",
+          "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
+          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "laatste_melding": {
+        "name": "Laatste melding"
+      },
+      "aantal": {
+        "name": "Meldingen bewaard"
+      }
+    }
+  }
+}
