@@ -39,7 +39,7 @@ PLATFORMS: list[Platform] = [
     Platform.GEO_LOCATION,
 ]
 
-KAART_URL = "/112hier/112hier-card.js"
+KAART_URL = "/112hier/card-112hier.js"
 
 
 def _lijst(waarde) -> list[str]:
@@ -59,7 +59,7 @@ async def _zorg_voor_kaart(hass: HomeAssistant) -> None:
         return
     hass.data[f"{DOMAIN}_kaart"] = True
 
-    bestand = Path(__file__).parent / "www" / "112hier-card.js"
+    bestand = Path(__file__).parent / "www" / "card-112hier.js"
     try:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(KAART_URL, str(bestand), True)]

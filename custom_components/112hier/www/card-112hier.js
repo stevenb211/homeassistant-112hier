@@ -10,8 +10,12 @@
  * Hij wordt door de integratie zelf ingeladen, dus je hoeft niets toe te
  * voegen aan je Lovelace-bronnen.
  *
+ * De naam is `card-112hier` en niet `112hier-card`: een custom element mag
+ * volgens de HTML-spec niet met een cijfer beginnen, en de browser weigert de
+ * registratie dan zonder dat je in Home Assistant iets misgaan ziet.
+ *
  * Gebruik:
- *   type: custom:112hier-card
+ *   type: custom:card-112hier
  *   entity: sensor.112_haaglanden_meldingen_bewaard
  *   aantal: 8            (optioneel, standaard 8)
  *   alleen_spoed: false  (optioneel)
@@ -55,7 +59,7 @@ class HierCard extends HTMLElement {
     const kandidaat = Object.keys(hass.states).find(
       (e) => e.startsWith('sensor.') && hass.states[e].attributes.meldingen,
     );
-    return { type: 'custom:112hier-card', entity: kandidaat || '', aantal: 8 };
+    return { type: 'custom:card-112hier', entity: kandidaat || '', aantal: 8 };
   }
 
   setConfig(config) {
@@ -110,7 +114,7 @@ class HierCard extends HTMLElement {
     }
     this._vorigeSleutel = sleutel;
 
-    const titel = this._config.titel || staat.attributes.friendly_name || '112-meldingen';
+    const titel = this._config.titel || this._naam(staat);
     const rijen = meldingen.length
       ? meldingen.map((m) => this._rij(m)).join('')
       : '<div class="leeg">Rustig op dit moment. Er is nog niets binnengekomen dat aan je filters voldoet.</div>';
@@ -128,6 +132,20 @@ class HierCard extends HTMLElement {
         if (el.dataset.url) window.open(el.dataset.url, '_blank', 'noopener');
       });
     });
+  }
+
+  /** De naam van het apparaat, niet die van de sensor.
+   *
+   * `friendly_name` is "112 · heel Nederland Meldingen bewaard": de naam van
+   * de configuratie met die van de entiteit erachter geplakt. Op een kaart
+   * die toch al een lijst meldingen toont is dat laatste stuk ruis.
+   */
+  _naam(staat) {
+    const apparaatId = this._hass.entities?.[this._config.entity]?.device_id;
+    const apparaat = apparaatId && this._hass.devices?.[apparaatId];
+    return (apparaat && (apparaat.name_by_user || apparaat.name))
+      || staat.attributes.friendly_name
+      || '112-meldingen';
   }
 
   _rij(m) {
@@ -206,14 +224,14 @@ class HierCard extends HTMLElement {
   }
 }
 
-if (!customElements.get('112hier-card')) {
-  customElements.define('112hier-card', HierCard);
+if (!customElements.get('card-112hier')) {
+  customElements.define('card-112hier', HierCard);
 
   // Zo verschijnt de kaart in de lijst bij "Kaart toevoegen" in plaats van dat
   // je de naam uit je hoofd moet typen.
   window.customCards = window.customCards || [];
   window.customCards.push({
-    type: '112hier-card',
+    type: 'card-112hier',
     name: '112hier — meldingen',
     description: 'De laatste 112-meldingen uit jouw gebied, nieuwste boven.',
     preview: true,
@@ -221,5 +239,5 @@ if (!customElements.get('112hier-card')) {
   });
 
   // eslint-disable-next-line no-console
-  console.info('%c112hier-card%c geladen', 'color:#ef4444;font-weight:700', '');
+  console.info('%ccard-112hier%c geladen', 'color:#ef4444;font-weight:700', '');
 }

@@ -16,7 +16,7 @@ boven, een kleur per dienst, de urgentie ernaast en hoe lang geleden het was.
 Klik op een regel en de melding opent op de kaart.
 
 ```yaml
-type: custom:112hier-card
+type: custom:card-112hier
 entity: sensor.112_haaglanden_meldingen_bewaard
 aantal: 8
 ```
