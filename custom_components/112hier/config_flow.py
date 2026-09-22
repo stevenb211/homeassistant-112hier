@@ -33,7 +33,10 @@ from .const import (
     CONF_BASIS,
     CONF_DIENSTEN,
     CONF_INTERVAL,
+    CONF_NEGEER,
+    CONF_NEGEER_CAPCODES,
     CONF_PLAATS,
+    CONF_SPOED_STRAAL,
     CONF_REGIOS,
     CONF_STRAAL,
     DEFAULT_BASIS,
@@ -86,7 +89,20 @@ def _schema(hass, standaard: dict[str, Any] | None = None) -> vol.Schema:
             # Oproepen voor deze codes komen altijd door, ook buiten je filters.
             vol.Optional(CONF_CAPCODES, default=s.get(CONF_CAPCODES, "")): TextSelector(),
             vol.Optional(CONF_BEVAT, default=s.get(CONF_BEVAT, "")): TextSelector(),
+            # Wegstrepen wat je nooit wilt zien. Testoproepen zijn het klassieke
+            # geval: die gaan elke week over de lijn en zijn bij elke ontvanger
+            # de eerste vraag die mensen stellen.
+            vol.Optional(CONF_NEGEER, default=s.get(CONF_NEGEER, "")): TextSelector(),
+            vol.Optional(
+                CONF_NEGEER_CAPCODES, default=s.get(CONF_NEGEER_CAPCODES, "")
+            ): TextSelector(),
             vol.Optional(CONF_ALLEEN_SPOED, default=s.get(CONF_ALLEEN_SPOED, False)): BooleanSelector(),
+            # Hoe dichtbij een spoedmelding moet zijn voordat de schakelaar
+            # "Spoed in de buurt" aangaat. Nul betekent: alles wat je filters
+            # doorlaat telt mee — genoeg voor wie al op één plaats filtert.
+            vol.Optional(CONF_SPOED_STRAAL, default=s.get(CONF_SPOED_STRAAL, 0)): NumberSelector(
+                NumberSelectorConfig(min=0, max=100, step=1, unit_of_measurement="km")
+            ),
             vol.Optional(CONF_INTERVAL, default=s.get(CONF_INTERVAL, 30)): NumberSelector(
                 NumberSelectorConfig(min=MIN_INTERVAL_SECONDEN, max=600, step=5, unit_of_measurement="s")
             ),

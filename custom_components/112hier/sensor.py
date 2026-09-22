@@ -115,7 +115,12 @@ class AantalMeldingen(Basis):
 
     @property
     def extra_state_attributes(self) -> dict:
-        """De hele lijst, zodat je er met een template-card iets mee kunt."""
+        """De hele lijst.
+
+        Hier leest onze eigen kaart uit, en je kunt er met een template-card
+        zelf iets mee bouwen. Genoeg velden om een rij te tonen zonder dat je
+        de melding nog ergens hoeft op te halen.
+        """
         return {
             "meldingen": [
                 {
@@ -123,8 +128,14 @@ class AantalMeldingen(Basis):
                     "tijd": m.get("ontvangen"),
                     "dienst": m.get("dienst"),
                     "urgentie": m.get("urgentie"),
+                    "urgentie_uitleg": m.get("urgentie_uitleg"),
+                    "spoed": (m.get("urgentie") or "") in SPOED_CODES,
                     "tekst": m.get("leesbaar") or m.get("bericht"),
                     "plaats": m.get("plaats"),
+                    "straat": m.get("straat"),
+                    "regio": m.get("regio"),
+                    "afstand_km": m.get("afstand_km"),
+                    "incident_id": m.get("incident_id"),
                     "url": m.get("url"),
                 }
                 for m in self.coordinator.meldingen

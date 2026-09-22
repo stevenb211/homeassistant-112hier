@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "112-meldingen volgen",
-        "description": "Kies waar je van wilt weten. Laat je alles leeg, dan krijg je heel Nederland — dat zijn er honderden per dag. Capcodes van je eigen post vind je op 112hier.nl/alerts; oproepen daarvoor komen altijd door.",
+        "description": "Kies waar je van wilt weten. Laat je alles leeg, dan krijg je heel Nederland — dat zijn er honderden per dag. Capcodes van je eigen post vind je op 112hier.nl/alerts; oproepen daarvoor komen altijd door. In de trefwoordvelden mag je * en ? gebruiken, bijvoorbeeld *Epe*.",
         "data": {
           "regios": "Veiligheidsregio's",
           "diensten": "Diensten",
@@ -14,7 +14,10 @@
           "interval": "Hoe vaak kijken",
           "basis": "Adres van de feed",
           "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
-          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)",
+          "negeer": "Nooit tonen als het bericht dit bevat (bijvoorbeeld: testoproep)",
+          "negeer_capcodes": "Nooit tonen voor deze capcodes (komma-gescheiden)",
+          "spoed_straal": "Spoed in de buurt: binnen hoeveel km"
         }
       }
     },
@@ -37,7 +40,10 @@
           "interval": "Hoe vaak kijken",
           "basis": "Adres van de feed",
           "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
-          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)",
+          "negeer": "Nooit tonen als het bericht dit bevat (bijvoorbeeld: testoproep)",
+          "negeer_capcodes": "Nooit tonen voor deze capcodes (komma-gescheiden)",
+          "spoed_straal": "Spoed in de buurt: binnen hoeveel km"
         }
       }
     }
@@ -49,6 +55,11 @@
       },
       "aantal": {
         "name": "Meldingen bewaard"
+      }
+    },
+    "binary_sensor": {
+      "spoed_in_de_buurt": {
+        "name": "Spoed in de buurt"
       }
     }
   }

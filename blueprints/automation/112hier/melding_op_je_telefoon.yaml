@@ -1,0 +1,186 @@
+blueprint:
+  name: 112hier — melding op je telefoon
+  description: >
+    Stuurt een bericht naar je telefoon bij een 112-melding uit jouw gebied.
+
+    Je kiest zelf hoe dichtbij het moet zijn, welke urgenties tellen en of je
+    's nachts met rust gelaten wilt worden. Het bericht bevat de plaats, de
+    straat en de afstand, en een tik erop opent de melding op de kaart.
+
+    Deze automatisering luistert naar het event `112hier_melding` en niet naar
+    de sensor. Dat scheelt gemiste meldingen: komen er twee kort na elkaar
+    binnen, dan krijg je ze allebei in plaats van alleen de laatste.
+  domain: automation
+  source_url: https://github.com/stevenb211/homeassistant-112hier/blob/main/blueprints/automation/112hier/melding_op_je_telefoon.yaml
+  author: 112hier.nl
+
+  input:
+    waarheen:
+      name: Waar naartoe
+      description: De notify-dienst van je telefoon, bijvoorbeeld notify.mobile_app_telefoon_van_steven.
+      selector:
+        text:
+
+    urgenties:
+      name: Welke urgenties
+      description: >
+        Laat leeg voor alles. A0 en A1 zijn ambulance met spoed, P 1 is
+        brandweer of politie met spoed.
+      default: ["A0", "A1", "P 1", "PRIO 1"]
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - A0
+            - A1
+            - A2
+            - B1
+            - B2
+            - P 1
+            - P 2
+            - PRIO 1
+            - PRIO 2
+
+    maximale_afstand:
+      name: Hoe ver van huis
+      description: >
+        Alleen meldingen binnen dit aantal kilometer van je huis. Zet op 0 om
+        alles door te laten wat je in de integratie hebt ingesteld.
+        Let op: meldingen zonder adres hebben geen afstand en vallen dan af.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: km
+
+    zonder_afstand_ook:
+      name: Ook meldingen zonder adres
+      description: >
+        Niet elke meldkamer stuurt een straat mee; van zo'n melding weten we
+        alleen de plaats of helemaal niets. Aanzetten als je die liever toch
+        ziet dan mist.
+      default: false
+      selector:
+        boolean:
+
+    trefwoorden:
+      name: Alleen als dit erin staat
+      description: >
+        Komma-gescheiden, bijvoorbeeld "reanimatie, beknelling". Laat leeg voor
+        alles.
+      default: ""
+      selector:
+        text:
+
+    stille_uren_van:
+      name: Stil vanaf
+      description: Binnen deze uren gaat er niets af. Zet begin en eind gelijk om altijd te melden.
+      default: "23:00:00"
+      selector:
+        time:
+
+    stille_uren_tot:
+      name: Stil tot
+      default: "07:00:00"
+      selector:
+        time:
+
+    stille_uren_uitzondering:
+      name: "'s Nachts wel bij deze urgenties"
+      description: >
+        Deze komen ook binnen de stille uren door. Leeg laten betekent: 's
+        nachts echt niets.
+      default: ["A0"]
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options:
+            - A0
+            - A1
+            - P 1
+            - PRIO 1
+
+mode: queued
+max: 10
+
+trigger:
+  - platform: event
+    event_type: 112hier_melding
+
+variables:
+  urgenties: !input urgenties
+  maximale_afstand: !input maximale_afstand
+  zonder_afstand_ook: !input zonder_afstand_ook
+  trefwoorden: !input trefwoorden
+  stil_van: !input stille_uren_van
+  stil_tot: !input stille_uren_tot
+  nacht_uitzondering: !input stille_uren_uitzondering
+  m: "{{ trigger.event.data }}"
+  # Plek in één regel: straat en plaats als we ze hebben, anders wat er wel is.
+  plek: >-
+    {{ [m.straat, m.plaats] | reject('none') | reject('eq', '') | join(', ') }}
+
+condition:
+  # Urgentie
+  - condition: template
+    value_template: "{{ not urgenties or m.urgentie in urgenties }}"
+
+  # Afstand. Zonder coördinaten is er geen afstand; dan beslist de schakelaar
+  # hierboven of zo'n melding alsnog door mag.
+  - condition: template
+    value_template: >-
+      {% if not maximale_afstand %} true
+      {% elif m.afstand_km is none %} {{ zonder_afstand_ook }}
+      {% else %} {{ m.afstand_km | float(999) <= maximale_afstand | float }}
+      {% endif %}
+
+  # Trefwoord
+  - condition: template
+    value_template: >-
+      {% set woorden = trefwoorden.split(',') | map('trim') | reject('eq', '') | list %}
+      {% if not woorden %} true
+      {% else %}
+        {% set tekst = ((m.bericht or '') ~ ' ' ~ (m.leesbaar or '')) | lower %}
+        {{ woorden | map('lower') | select('in', tekst) | list | count > 0 }}
+      {% endif %}
+
+  # Stille uren, met een uitzondering voor de hoogste urgenties.
+  - condition: template
+    value_template: >-
+      {% if stil_van == stil_tot %} true
+      {% elif m.urgentie in nacht_uitzondering %} true
+      {% else %}
+        {% set nu = now().strftime('%H:%M:%S') %}
+        {% if stil_van < stil_tot %}
+          {{ not (stil_van <= nu < stil_tot) }}
+        {% else %}
+          {{ not (nu >= stil_van or nu < stil_tot) }}
+        {% endif %}
+      {% endif %}
+
+action:
+  - service: !input waarheen
+    data:
+      title: >-
+        {{ m.urgentie or 'Melding' }}{% if plek %} · {{ plek }}{% endif %}
+      message: >-
+        {{ m.leesbaar or m.bericht }}{% if m.afstand_km is not none %} ({{ m.afstand_km }} km){% endif %}
+      data:
+        # Werkt op Android; iOS negeert wat het niet kent.
+        url: "{{ m.url }}"
+        clickAction: "{{ m.url }}"
+        channel: "112hier"
+        importance: >-
+          {{ 'high' if m.urgentie in ['A0', 'A1', 'P 1', 'PRIO 1'] else 'default' }}
+        notification_icon: >-
+          {% set iconen = {
+            'brandweer': 'mdi:fire-truck',
+            'ambulance': 'mdi:ambulance',
+            'politie': 'mdi:car-emergency',
+            'knrm': 'mdi:ferry'
+          } %}
+          {{ iconen.get(m.dienst, 'mdi:alert-circle-outline') }}

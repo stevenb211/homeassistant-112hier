@@ -2,42 +2,48 @@
   "config": {
     "step": {
       "user": {
-        "title": "112-meldingen volgen",
-        "description": "Kies waar je van wilt weten. Laat je alles leeg, dan krijg je heel Nederland — dat zijn er honderden per dag. Capcodes van je eigen post vind je op 112hier.nl/alerts; oproepen daarvoor komen altijd door.",
+        "title": "Follow 112 dispatches",
+        "description": "Pick what you want to hear about. Leave everything empty and you get the whole of the Netherlands — that is hundreds a day. Capcodes for your own station are listed on 112hier.nl/alerts; calls for those always come through. The keyword fields accept * and ?, for example *Epe*.",
         "data": {
-          "regios": "Veiligheidsregio's",
-          "diensten": "Diensten",
-          "plaats": "Woonplaats (optioneel)",
-          "punt": "Of een punt op de kaart",
-          "straal": "Straal rond dat punt",
-          "alleen_spoed": "Alleen spoed (A0, A1, P 1, PRIO 1)",
-          "interval": "Hoe vaak kijken",
-          "basis": "Adres van de feed",
-          "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
-          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+          "regios": "Safety regions",
+          "diensten": "Services",
+          "plaats": "Town or city (optional)",
+          "punt": "Or a point on the map",
+          "straal": "Radius around that point",
+          "alleen_spoed": "Urgent only (A0, A1, P 1, PRIO 1)",
+          "interval": "How often to check",
+          "basis": "Feed address",
+          "capcodes": "Follow your own station (capcodes, comma separated)",
+          "bevat": "Only if the message contains this (comma separated)",
+          "negeer": "Never show if the message contains this (for example: testoproep)",
+          "negeer_capcodes": "Never show for these capcodes (comma separated)",
+          "spoed_straal": "Urgent nearby: within how many km"
         }
       }
     },
     "error": {
-      "geen_verbinding": "Geen verbinding met de feed. Klopt het adres, en heeft Home Assistant internet?",
-      "geen_feed": "Dit adres antwoordt wel, maar het is geen 112hier-feed."
+      "geen_verbinding": "Could not reach the feed. Is the address correct, and does Home Assistant have internet?",
+      "geen_feed": "This address answers, but it is not a 112hier feed."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Instellingen aanpassen",
+        "title": "Change settings",
         "data": {
-          "regios": "Veiligheidsregio's",
-          "diensten": "Diensten",
-          "plaats": "Woonplaats (optioneel)",
-          "punt": "Of een punt op de kaart",
-          "straal": "Straal rond dat punt",
-          "alleen_spoed": "Alleen spoed (A0, A1, P 1, PRIO 1)",
-          "interval": "Hoe vaak kijken",
-          "basis": "Adres van de feed",
-          "capcodes": "Eigen post volgen (capcodes, komma-gescheiden)",
-          "bevat": "Alleen als het bericht dit bevat (komma-gescheiden)"
+          "regios": "Safety regions",
+          "diensten": "Services",
+          "plaats": "Town or city (optional)",
+          "punt": "Or a point on the map",
+          "straal": "Radius around that point",
+          "alleen_spoed": "Urgent only (A0, A1, P 1, PRIO 1)",
+          "interval": "How often to check",
+          "basis": "Feed address",
+          "capcodes": "Follow your own station (capcodes, comma separated)",
+          "bevat": "Only if the message contains this (comma separated)",
+          "negeer": "Never show if the message contains this (for example: testoproep)",
+          "negeer_capcodes": "Never show for these capcodes (comma separated)",
+          "spoed_straal": "Urgent nearby: within how many km"
         }
       }
     }
@@ -45,10 +51,15 @@
   "entity": {
     "sensor": {
       "laatste_melding": {
-        "name": "Laatste melding"
+        "name": "Latest dispatch"
       },
       "aantal": {
-        "name": "Meldingen bewaard"
+        "name": "Dispatches kept"
+      }
+    },
+    "binary_sensor": {
+      "spoed_in_de_buurt": {
+        "name": "Urgent nearby"
       }
     }
   }

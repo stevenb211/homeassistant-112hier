@@ -25,6 +25,15 @@ CONF_INTERVAL = "interval"
 # buiten je regio en buiten de diensten die je koos — dat is het hele punt.
 CONF_CAPCODES = "capcodes"
 CONF_BEVAT = "bevat"
+# Wat je juist nooit wilt zien. Testoproepen komen elke week langs en zijn bij
+# elke P2000-ontvanger de eerste vraag die mensen stellen. Negeren gaat vóór
+# alles, ook vóór je eigen post: een testoproep naar je eigen kazerne blijft
+# een testoproep.
+CONF_NEGEER = "negeer"
+CONF_NEGEER_CAPCODES = "negeer_capcodes"
+# Binnen hoeveel kilometer een spoedmelding de schakelaar "spoed in de buurt"
+# aan mag zetten. 0 = alles wat door je filters komt telt mee.
+CONF_SPOED_STRAAL = "spoed_straal"
 
 # Urgenties die als spoed tellen. A0 is de hoogste ambulance-urgentie en hoort
 # er dus bij — die ontbrak lang in dit soort lijstjes omdat hij zeldzaam is.

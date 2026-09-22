@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from fnmatch import fnmatch
 
 import aiohttp
 import async_timeout
@@ -21,6 +22,26 @@ from .const import DOMAIN, EVENT_MELDING, FEED_PAD, SPOED_CODES
 _LOGGER = logging.getLogger(__name__)
 
 MAX_BEWAARD = 30
+
+
+def raakt(tekst: str, patronen: list[str]) -> bool:
+    """Waar als één van de patronen op de tekst slaat.
+
+    Een gewoon woord zoekt als deel van de regel: "brand" vindt ook
+    "schoorsteenbrand". Zet je er een * of ? in, dan geldt het als patroon over
+    de hele regel — dezelfde schrijfwijze als de filterbestanden van de
+    ontvangers die je zelf draait, zodat je een bestaand lijstje kunt
+    overnemen: `A1 *Epe*`.
+    """
+    laag = tekst.lower()
+    for p in patronen:
+        p = p.lower()
+        if "*" in p or "?" in p:
+            if fnmatch(laag, p):
+                return True
+        elif p in laag:
+            return True
+    return False
 
 
 class HierCoordinator(DataUpdateCoordinator):
@@ -39,6 +60,8 @@ class HierCoordinator(DataUpdateCoordinator):
         alleen_spoed: bool = False,
         capcodes: list[str] | None = None,
         bevat: list[str] | None = None,
+        negeer: list[str] | None = None,
+        negeer_capcodes: list[str] | None = None,
     ) -> None:
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=interval)
         self._basis = basis.rstrip("/")
@@ -50,6 +73,8 @@ class HierCoordinator(DataUpdateCoordinator):
         self._alleen_spoed = alleen_spoed
         self._capcodes = capcodes or []
         self._bevat = bevat or []
+        self._negeer = negeer or []
+        self._negeer_capcodes = negeer_capcodes or []
         # Thuislocatie uit de Home Assistant-instellingen, om de afstand te
         # kunnen berekenen. Die staat er altijd; iemand heeft hem bij de
         # installatie ingevuld.
@@ -85,7 +110,9 @@ class HierCoordinator(DataUpdateCoordinator):
             p.append(f"lat={self._punt[0]}&lon={self._punt[1]}&straal={self._straal}")
         if self._capcodes:
             p.append("capcodes=" + ",".join(self._capcodes))
-        if self._bevat:
+        # Jokertekens kan de feed niet aan; zodra er één patroon tussen zit
+        # halen we breder op en doen we het filteren hieronder zelf.
+        if self._bevat and not any("*" in w or "?" in w for w in self._bevat):
             p.append("bevat=" + ",".join(self._bevat))
         return f"{self._basis}{FEED_PAD}?" + "&".join(p)
 
@@ -104,13 +131,27 @@ class HierCoordinator(DataUpdateCoordinator):
     def _past(self, m: dict) -> bool:
         """Filters die de feed niet zelf kan doen.
 
-        Volg je een eigen post, dan komt die er altijd door: ook buiten je regio,
-        ook buiten de diensten die je koos, ook als je "alleen spoed" aanstaat.
-        Anders mis je de oproep van je eigen kazerne omdat hij een P 2 was.
+        De volgorde is: eerst wegstrepen wat je nooit wilt zien, dan je eigen
+        post erdoor, dan de gewone filters. Negeren wint dus van alles — een
+        testoproep naar je eigen kazerne is nog steeds een testoproep.
+
+        Volg je een eigen post, dan komt die er verder altijd door: ook buiten
+        je regio, ook buiten de diensten die je koos, ook als je "alleen spoed"
+        aanstaat. Anders mis je de oproep van je kazerne omdat hij een P 2 was.
         """
+        tekst = f"{m.get('bericht') or ''} {m.get('leesbaar') or ''}"
+        codes = [str(c).lstrip("0") for c in (m.get("capcodes") or [])]
+
+        if self._negeer and raakt(tekst, self._negeer):
+            return False
+        if self._negeer_capcodes:
+            weg = {c.lstrip("0") for c in self._negeer_capcodes}
+            if any(c in weg for c in codes):
+                return False
+
         if self._capcodes:
             mijn = {c.lstrip("0") for c in self._capcodes}
-            if any(str(c).lstrip("0") in mijn for c in (m.get("capcodes") or [])):
+            if any(c in mijn for c in codes):
                 return True
 
         if self._regios and m.get("regio_code") not in self._regios:
@@ -119,10 +160,8 @@ class HierCoordinator(DataUpdateCoordinator):
             return False
         if self._alleen_spoed and (m.get("urgentie") or "") not in SPOED_CODES:
             return False
-        if self._bevat:
-            tekst = f"{m.get('bericht') or ''} {m.get('leesbaar') or ''}".lower()
-            if not any(w.lower() in tekst for w in self._bevat):
-                return False
+        if self._bevat and not raakt(tekst, self._bevat):
+            return False
         return True
 
     async def _async_update_data(self) -> list[dict]:
